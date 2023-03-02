@@ -1,19 +1,48 @@
 body {
     display: grid;
     grid-template-columns: [first] 64px [line2] 50px [line3] auto [col4-start] 50px [five] 40px [end];
-  grid-template-rows: [row1-start] 64px [row1-end] 800px [third-line] 100% [last-line];
+    grid-template-rows: [row1-start] 64px [row1-end] 850px [third-line] 100% [fourth-line];
+    margin: 0px;
+    background-image: url("IMG/neongame.jpg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 #game-canvas {
-    grid-column-start: 2;
+    grid-column-start: 1;
   grid-column-end: 4;
   grid-row-start: 2;
   grid-row-end: 3;
+  margin-left: 30px;
 }
 
-.f {
-    grid-column-start: 2;
+.header {
+    grid-column-start: 1;
+  grid-column-end: 6;
+  grid-row-start: 1;
+  grid-row-end: 2;
+  margin-bottom: 3px;
+  box-shadow: 3px;
+}
+
+.TD {
+    grid-column-start: 1;
+  grid-column-end: 4;
+  grid-row-start: 3;
+  grid-row-end: 4;
+}
+
+.h1 {
+    margin-left: 30px;
+    color: rgb(53, 186, 227);
+    font-size: 64px;
+    align-self: top;
+}
+/* .f {
+    grid-column-start: 1;
   grid-column-end: 4;
   grid-row-start: 2;
   grid-row-end: 3;
-}
+} */
+
