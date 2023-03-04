@@ -1,5 +1,5 @@
 'use strict'
-const Game = new Phaser.Game(1300, 850, Phaser.AUTO, 'game-canvas');
+const Game = new Phaser.Game(1344, 896, Phaser.AUTO, 'game-canvas');
 
 Game.state.add('MainMenu', mainMenuState);
 Game.state.add('Setting', settingState);
