@@ -13,7 +13,7 @@ const levelsState = {
     create: function () {
         Game.add.image(0, 0, 'background');
 
-        Game.add.text(Game.width / 2, 130, 'Levels', { fontSize: 100 }).anchor.setTo(0.5);
+        Game.add.text(Game.width / 2, 130, 'Levels', { fontSize: 65, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 18}).anchor.setTo(0.5);
 
         console.log(this.levels);
 
