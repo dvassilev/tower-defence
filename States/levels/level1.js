@@ -25,6 +25,7 @@ const level1State = {
         this.map.addTilesetImage('map-tilesheet', 'map-tileset');
         this.map.createLayer('path');
         this.map.setCollisionByExclusion([]);
+
     },
     createCollisionLayers: function () {
         pathOutlinesLayer = this.map.createLayer('pathOutlines');
@@ -45,6 +46,8 @@ const level1State = {
     update: function () {
         this.changeDirection(troop);
         Game.physics.arcade.collide(troop, pathOutlinesLayer);
+        console.log(troop.body.touching.up);
+        console.log(troop.body.touching.right);
     },
 
     changeDirection: function (currentTroop) {
