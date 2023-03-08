@@ -20,6 +20,7 @@ const level1State = {
 
     },
 
+    //Functions for create
     createMap: function () {
         this.map = Game.add.tilemap('game-map');
         this.map.addTilesetImage('map-tilesheet', 'map-tileset');
@@ -40,53 +41,98 @@ const level1State = {
         troop.direction = this.gameDirection;
         Game.physics.enable(troop);
         troop.body.velocity.x = this.enemyTroopsSpeed;
-        troop.currentDirection = this.gameDirection;
     },
 
+
+
+    
     update: function () {
-        this.changeDirection(troop);
-        Game.physics.arcade.collide(troop, pathOutlinesLayer);
-        console.log(troop.body.touching.up);
-        console.log(troop.body.touching.right);
+        //Make the troops moving
+        Game.physics.arcade.collide(troop, pathOutlinesLayer, this.changeDirection);
     },
 
-    changeDirection: function (currentTroop) {
-        console.log(currentTroop.currentDirection);
-        console.log(currentTroop.previousDirection);
-        console.log(pathOutlinesLayer.getBounds())
-        // if (Game.physics.arcade.collide(currentTroop, pathOutlinesLayer)) {
-        //     if (currentTroop.currentDirection == 'left' || currentTroop.currentDirection == 'right') {
-        //         currentTroop.body.velocity.x = 0;
+    //Additional functions for update
+    changeDirection: function () {
+        let currentTroop = troop;
+        let direction = currentTroop.direction;
 
-        //         if (currentTroop.previousDirection == 'up') {
-        //             currentTroop.body.velocity.y = this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'down';
-        //         } else {
-        //             currentTroop.body.velocity.y = -this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'up';
-                    
-        //         }
-        //     } else if (currentTroop.currentDirection == 'up' || currentTroop.currentDirection == 'down') {
-        //         currentTroop.body.velocity.y = 0;
-
-        //         if (currentTroop.previousDirection == 'right') {
-        //             currentTroop.body.velocity.x = this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'left';
-        //         } else {
-        //             currentTroop.body.velocity.x = -this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'right';
-                    
-        //         }
-        //     }
-        // }
-
+        let troopX = currentTroop.position.x;
+        let troopY = currentTroop.position.y
         
+        if (direction == 'left' || direction == 'right') {
+            currentTroop.body.velocity.x = 0;
+
+            //Check if there is path down or up
+            if (!level1State.checkIfInCollidingLayer(troopX, troopY - 70)) {
+                currentTroop.body.velocity.y = -level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'up';
+            } else if(!level1State.checkIfInCollidingLayer(troopX, troopY + 70)){
+                currentTroop.body.velocity.y = level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'down';
+            } else {
+                console.log('error with previous direction left or right');
+            }
+        } else if (direction == 'up' || direction == 'down') {
+            currentTroop.body.velocity.y = 0;
+
+            //Check if there is path to the left or to the right
+            if (!level1State.checkIfInCollidingLayer(troopX - 70, troopY)) {
+                currentTroop.body.velocity.x = -level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'left';
+            } else if(!level1State.checkIfInCollidingLayer(troopX + 70, troopY)){
+                currentTroop.body.velocity.x = level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'right';
+            } else {
+                console.log('error with previous direction up or down');
+            }
+        }
     },
 
-    gameDirection: 'left',
-    enemyTroopsSpeed: 500,
+    checkIfInCollidingLayer: function(x, y) {
+        //14
+        let layerHeightTiles = this.collidingLayerData.height;
+        //21
+        let layerWidthTiles = this.collidingLayerData.width;
+
+        //Find the coordinates tile properties
+        let widthInTiles = Math.floor(x / 64);
+        let heightInTiles = Math.floor(y / 64);
+
+        let tileIndexInArray = heightInTiles * layerWidthTiles + widthInTiles;
+
+        if (this.collidingLayerData.data[tileIndexInArray] != 0) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+
+    //Variables
+    collidingLayerData: {
+        "data": [130, 130, 130, 130, 70, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 72, 130,
+            130, 130, 130, 130, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 73, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 74, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 93, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 93, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 70, 71, 71, 71, 71, 71, 71, 97, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 93, 0, 0, 0, 0, 0, 0, 0, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 93, 0, 73, 117, 117, 117, 117, 117, 117, 118, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130,
+            71, 71, 71, 71, 97, 0, 95, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130,
+            0, 0, 0, 0, 0, 0, 95, 130, 130, 130, 93, 0, 96, 71, 71, 71, 71, 71, 71, 71, 71,
+            117, 117, 117, 117, 117, 117, 118, 130, 130, 130, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
+            130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130],
+        "height": 14,
+        "id": 1,
+        "name": "pathOutlines",
+        "opacity": 1,
+        "type": "tilelayer",
+        "visible": true,
+        "width": 21,
+        "x": 0,
+        "y": 0
+    },
+    gameDirection: 'right',
+    enemyTroopsSpeed: 1000,
 }
