@@ -5,8 +5,8 @@ let level1;
 const levelsState = {
     preload: function () {
         Game.load.image('background', '../IMG/levelsBackground.png');
-        Game.load.image('level1Icon', '../IMG/Levels/level1Logo.png');
-        Game.load.image('level2Icon', '../IMG/Levels/level2Logo.png');
+        Game.load.image('Level1', '../IMG/Levels/level1Logo.png');
+        Game.load.image('Level2', '../IMG/Levels/level2Logo.png');
         Game.load.image('unloadedLevelIcon', '../IMG/Levels/lockedlevelLogo.png');
     },
 
@@ -28,13 +28,11 @@ const levelsState = {
                     imageKey = this.levels.length - 1;
                 }
 
-                console.log('imageKey:' + imageKey);
-                console.log('levelsLength:' + this.levels.length);
-                console.log(xcoordinates);
-                console.log(ycoordinates);
-                console.log(this.levels[imageKey])
-
-                Game.add.image(xcoordinates, ycoordinates, this.levels[imageKey]);
+                if(this.levels[imageKey] != 'unloadedLevelIcon') {
+                    Game.add.button(xcoordinates, ycoordinates, this.levels[imageKey], () => Game.state.start(this.levels[imageKey]));
+                } else {
+                    Game.add.image(xcoordinates, ycoordinates, this.levels[imageKey]);
+                }
             }
         };
 
@@ -44,5 +42,5 @@ const levelsState = {
 
     },
 
-    levels: ['level1Icon', 'level2Icon', 'unloadedLevelIcon'],
+    levels: ['Level1', 'Level2', 'unloadedLevelIcon'],
 }
