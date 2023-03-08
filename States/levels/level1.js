@@ -41,6 +41,7 @@ const level1State = {
         troop.direction = this.gameDirection;
         Game.physics.enable(troop);
         troop.body.velocity.x = this.enemyTroopsSpeed;
+        troop.angle = 90;
     },
 
 
@@ -66,9 +67,11 @@ const level1State = {
             if (!level1State.checkIfInCollidingLayer(troopX, troopY - 70)) {
                 currentTroop.body.velocity.y = -level1State.enemyTroopsSpeed;
                 currentTroop.direction = 'up';
+                currentTroop.angle = 0;
             } else if(!level1State.checkIfInCollidingLayer(troopX, troopY + 70)){
                 currentTroop.body.velocity.y = level1State.enemyTroopsSpeed;
                 currentTroop.direction = 'down';
+                currentTroop.angle = 180;
             } else {
                 console.log('error with previous direction left or right');
             }
@@ -79,9 +82,11 @@ const level1State = {
             if (!level1State.checkIfInCollidingLayer(troopX - 70, troopY)) {
                 currentTroop.body.velocity.x = -level1State.enemyTroopsSpeed;
                 currentTroop.direction = 'left';
+                currentTroop.angle = 270;
             } else if(!level1State.checkIfInCollidingLayer(troopX + 70, troopY)){
                 currentTroop.body.velocity.x = level1State.enemyTroopsSpeed;
                 currentTroop.direction = 'right';
+                currentTroop.angle = 90;
             } else {
                 console.log('error with previous direction up or down');
             }
