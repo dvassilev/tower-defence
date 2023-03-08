@@ -3,7 +3,7 @@ body {
     grid-template-columns: [first] 64px [line2] 50px [line3] auto [col4-start] 50px [five] 40px [end];
     grid-template-rows: [row1-start] 64px [row1-end] 850px [third-line] 100% [fourth-line];
     margin: 0px;
-
+}
 
 #game-canvas {
     grid-column-start: 1;
