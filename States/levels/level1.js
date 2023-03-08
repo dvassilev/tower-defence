@@ -40,6 +40,7 @@ const level1State = {
         Game.physics.enable(troop);
         troop.body.velocity.x = this.enemyTroopsSpeed;
         troop.currentDirection = this.gameDirection;
+        
     },
 
     update: function () {
@@ -86,4 +87,6 @@ const level1State = {
 
     gameDirection: 'left',
     enemyTroopsSpeed: 500,
+
+
 }
