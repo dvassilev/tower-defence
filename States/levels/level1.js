@@ -1,5 +1,5 @@
 'use strict'
-let troop, pathOutlinesLayer;
+let pathOutlinesLayer;
 
 const level1State = {
     preload: function () {
@@ -9,84 +9,238 @@ const level1State = {
 
         //Load enemy troops
         Game.load.image('enemy-troop-1', '../IMG/enemy-troop-1.png');
+
+        //Load hearts
+        Game.load.image('fullLive', './/IMG/fullLive.png');
+        Game.load.image('emptyLive', './/IMG/takenLive.png');
     },
+
+
+
 
     create: function () {
+        //Create the map
         this.createMap();
 
-        this.createEnemyTroop(11);
+        //Create and spawn enemy troops
+        this.enemyTroops = Game.add.group();
 
-        this.createCollisionLayers();
+        for (let i = 0; i <= this.troopsPerWave; i++) {
+            this.createEnemyTroop(-i * 90 - 64, 11);
+        }
 
+        //Add lives
+        this.lives = Game.add.group();
+
+        for (let i = 0; i < 3; i++) {
+            this.createHeart(i * 64, 0, 'full');
+        }
     },
 
+    //Functions for create
     createMap: function () {
         this.map = Game.add.tilemap('game-map');
         this.map.addTilesetImage('map-tilesheet', 'map-tileset');
         this.map.createLayer('path');
         this.map.setCollisionByExclusion([]);
-    },
-    createCollisionLayers: function () {
+
         pathOutlinesLayer = this.map.createLayer('pathOutlines');
         this.map.createLayer('turrets');
         this.map.createLayer('decoration');
+
     },
-    createEnemyTroop: function (startingTile) {
-        troop = Game.add.sprite(30, (startingTile - 1) * 64 + 32, 'enemy-troop-1');
+    createEnemyTroop: function (Xpositions, startingTileHeightNumber) {
+        let troop = level1State.enemyTroops.create(Xpositions, startingTileHeightNumber * 64 - 32, 'enemy-troop-1');
         troop.anchor.setTo(0.5);
         troop.width = 64;
         troop.height = 64;
+        troop.angle = 90;
+
         troop.direction = this.gameDirection;
         Game.physics.enable(troop);
         troop.body.velocity.x = this.enemyTroopsSpeed;
-        troop.currentDirection = this.gameDirection;
-        
+
+
+        // troop.checkWorldBounds = true;
+        // troop.events.onOutOfBounds.add(level1State.troopOut, this);
     },
+    createHeart: function (x, y, type) {
+        let heart;
+
+        if(type == 'full') {
+            heart = this.lives.create(x, y, 'fullLive');
+        } else if(type =='empty') {
+            heart = this.lives.create(x, y, 'emptyLive');
+        } else {
+            console.log('herat type error');
+        }
+
+        heart.type = type;
+
+        heart.width = 64;
+        heart.height = 64
+    },
+
+
 
     update: function () {
-        this.changeDirection(troop);
-        Game.physics.arcade.collide(troop, pathOutlinesLayer);
+        //Check if the furthest enemy is in the world
+        this.ifEnemyInWorld();
+
+        //Make enemy troops collide with the map
+        Game.physics.arcade.collide(level1State.enemyTroops, pathOutlinesLayer, this.changeDirection);
     },
 
-    changeDirection: function (currentTroop) {
-        console.log(currentTroop.currentDirection);
-        console.log(currentTroop.previousDirection);
-        console.log(pathOutlinesLayer.getBounds())
-        // if (Game.physics.arcade.collide(currentTroop, pathOutlinesLayer)) {
-        //     if (currentTroop.currentDirection == 'left' || currentTroop.currentDirection == 'right') {
-        //         currentTroop.body.velocity.x = 0;
 
-        //         if (currentTroop.previousDirection == 'up') {
-        //             currentTroop.body.velocity.y = this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'down';
-        //         } else {
-        //             currentTroop.body.velocity.y = -this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'up';
-                    
-        //         }
-        //     } else if (currentTroop.currentDirection == 'up' || currentTroop.currentDirection == 'down') {
-        //         currentTroop.body.velocity.y = 0;
 
-        //         if (currentTroop.previousDirection == 'right') {
-        //             currentTroop.body.velocity.x = this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'left';
-        //         } else {
-        //             currentTroop.body.velocity.x = -this.enemyTroopsSpeed;
-        //             currentTroop.previousDirection = currentTroop.currentDirection;
-        //             currentTroop.currentDirection = 'right';
-                    
-        //         }
-        //     }
-        // }
 
-        
+    //Additional functions 
+    changeDirection: function () {
+        let currentTroop = arguments[0]
+        let direction = currentTroop.direction;
+
+        let troopX = currentTroop.position.x;
+        let troopY = currentTroop.position.y
+
+        if (direction == 'left' || direction == 'right') {
+            currentTroop.body.velocity.x = 0;
+
+            //Check if there is path down or up
+            if (!level1State.checkIfInCollidingLayer(troopX, troopY - 70)) {
+                currentTroop.body.velocity.y = -level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'up';
+                currentTroop.angle = 0;
+            } else if (!level1State.checkIfInCollidingLayer(troopX, troopY + 70)) {
+                currentTroop.body.velocity.y = level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'down';
+                currentTroop.angle = 180;
+            } else {
+                console.log('error with previous direction left or right');
+            }
+        } else if (direction == 'up' || direction == 'down') {
+            currentTroop.body.velocity.y = 0;
+
+            //Check if there is path to the left or to the right
+            if (!level1State.checkIfInCollidingLayer(troopX - 70, troopY)) {
+                currentTroop.body.velocity.x = -level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'left';
+                currentTroop.angle = 270;
+            } else if (!level1State.checkIfInCollidingLayer(troopX + 70, troopY)) {
+                currentTroop.body.velocity.x = level1State.enemyTroopsSpeed;
+                currentTroop.direction = 'right';
+                currentTroop.angle = 90;
+            } else {
+                console.log('error with previous direction up or down');
+            }
+        }
+    },
+    checkIfInCollidingLayer: function (x, y) {
+        let layerWidthTiles = this.collidingLayerData.width;
+
+        //Find the coordinates tile properties
+        let widthInTiles = Math.floor(x / 64);
+        let heightInTiles = Math.floor(y / 64);
+
+        let tileIndexInArray = heightInTiles * layerWidthTiles + widthInTiles;
+
+        if (this.collidingLayerData.data[tileIndexInArray] != 0) {
+            return true;
+        } else {
+            return false;
+        }
+    },
+    ifEnemyInWorld: function () {
+        let furthestEnemy = this.enemyTroops.children[0];
+
+        if (furthestEnemy != undefined) {
+            let furthestEnemyX = furthestEnemy.position.x;
+            let furthestEnemyY = furthestEnemy.position.y;
+
+
+            if (this.gameDirection == 'right') {
+                if (furthestEnemyX - 64 > Game.width) {
+                    furthestEnemy.destroy();
+                    this.removeLive();
+                }
+            } else if (this.gameDirection == 'left') {
+                if (furthestEnemyX + 64 < 0) {
+                    furthestEnemy.destroy();
+                    this.removeLive();
+                }
+            } else if (this.gameDirection == 'up') {
+                if (furthestEnemyY + 64 < 0) {
+                    furthestEnemy.destroy();
+                    this.removeLive();
+                }
+            } else if (this.gameDirection == 'down') {
+                if (furthestEnemyY - 64 > Game.height) {
+                    furthestEnemy.destroy();
+                    this.removeLive();
+                }
+
+            }
+        }
+    },
+    removeLive: function () {
+        let lives = this.lives;
+        let currentLive;
+
+        for(let i = lives.children.length - 1; i >= 0; i--) {
+            let live = lives.children[i];
+
+            if(live.type == 'full') {
+                currentLive = live;
+                break;
+            }
+        }
+
+        let fullLiveX = currentLive.position.x;
+        let fullLiveY = currentLive.position.y;
+
+        currentLive.destroy();
+
+        this.createHeart(fullLiveX, fullLiveY, 'empty');
+
+
+        if (lives.length == 0) {
+            this.endGame();
+        } 
+    },
+    endGame: function() {
+        this.enemyTroops.children.forEach(enemy => {
+            enemy.body.velocity = 0;
+        })
     },
 
-    gameDirection: 'left',
-    enemyTroopsSpeed: 500,
 
 
+    //Variables
+    collidingLayerData: {
+        "data": [130, 130, 130, 130, 70, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 71, 72, 130,
+            130, 130, 130, 130, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 73, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117, 74, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 93, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 93, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 70, 71, 71, 71, 71, 71, 71, 97, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 93, 0, 0, 0, 0, 0, 0, 0, 0, 95, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 93, 0, 73, 117, 117, 117, 117, 117, 117, 118, 130,
+            130, 130, 130, 130, 93, 0, 95, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130,
+            71, 71, 71, 71, 97, 0, 95, 130, 130, 130, 93, 0, 95, 130, 130, 130, 130, 130, 130, 130, 130,
+            0, 0, 0, 0, 0, 0, 95, 130, 130, 130, 93, 0, 96, 71, 71, 71, 71, 71, 71, 71, 71,
+            117, 117, 117, 117, 117, 117, 118, 130, 130, 130, 93, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 116, 117, 117, 117, 117, 117, 117, 117, 117, 117, 117,
+            130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130, 130],
+        "height": 14,
+        "id": 1,
+        "name": "pathOutlines",
+        "opacity": 1,
+        "type": "tilelayer",
+        "visible": true,
+        "width": 21,
+        "x": 0,
+        "y": 0
+    },
+    gameDirection: 'right',
+    enemyTroopsSpeed: 1000,
+    troopsPerWave: [5]
 }
