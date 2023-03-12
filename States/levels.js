@@ -15,8 +15,6 @@ const levelsState = {
 
         Game.add.text(Game.width / 2, 130, 'Levels', { fontSize: 65, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 18}).anchor.setTo(0.5);
 
-        console.log(this.levels);
-
         for (let i = 1; i <= 3; i++) {
             let ycoordinates = 3 * 64 + (i - 1) * 3 * 64;
 
