@@ -13,6 +13,11 @@ const level1State = {
         //Load hearts
         Game.load.image('fullLive', './/IMG/fullLive.png');
         Game.load.image('emptyLive', './/IMG/takenLive.png');
+
+
+
+        Game.load.spritesheet('turretBTN','.//IMG/TurretBtn.png')
+        Game.load.spritesheet('turret','.//IMG/towerDefense_tile250.png') 
     },
 
 
@@ -34,7 +39,13 @@ const level1State = {
 
         for (let i = 0; i < 3; i++) {
             this.createHeart(i * 64, 0, 'full');
-        }
+        };
+
+
+
+        this.lives.inputEnableChildren = true;
+
+        this.createTurretBtn();
     },
 
     //Functions for create
@@ -45,7 +56,8 @@ const level1State = {
         this.map.setCollisionByExclusion([]);
 
         pathOutlinesLayer = this.map.createLayer('pathOutlines');
-        this.map.createLayer('turrets');
+        this.turretsLayer = this.map.createLayer('turrets')
+       this.turretsLayer.inputEnabled = true;
         this.map.createLayer('decoration');
 
     },
@@ -81,11 +93,52 @@ const level1State = {
         heart.height = 64
     },
 
+    createTurretBtn: function () {
+        this.turretBtn = Game.add.button(0, Game.height - 600, 'turretBTN', level1State.spawnTurret)
+        this.turretBtn.scale.setTo(0.5)
+
+        level1State.LBtn = Game.input.activePointer.leftButton
+
+  
+    },
+
+
+    spawnTurret: function () {
+        level1State.turret = Game.add.sprite(0, Game.height - 100, 'turret')
+        level1State.turret.width = 64
+        level1State.turret.height = 64
+        level1State.turret.anchor.setTo(0.5)
+        level1State.toMove = true
+
+        Game.physics.enable(level1State.turret)
+       
+       
+    },
+
+    dragDropTurret: function () {
+        this.turret.position.x = this.input.activePointer.worldX
+        this.turret.position.y = this.input.activePointer.worldY
+    },
+
 
 
     update: function () {
         //Check if the furthest enemy is in the world
         this.ifEnemyInWorld();
+
+        if(this.LBtn.isDown) {
+            
+            this.toMove = false
+                      
+                    };
+                    if (this.toMove) {
+                        level1State.dragDropTurret()
+                    };
+            
+            
+                    if (this.lives.input.pointerOver()) {
+                        console.log(1)
+                    }
 
         //Make enemy troops collide with the map
         Game.physics.arcade.collide(level1State.enemyTroops, pathOutlinesLayer, this.changeDirection);
