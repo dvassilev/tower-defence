@@ -32,6 +32,10 @@ const level1State = {
         //Load pause and start buttons
         Game.load.image('pauseButton', './/IMG/pauseButton.png');
         Game.load.image('playButton', './/IMG/playButton.png');
+
+        //Load lose screen atributes
+        Game.load.image('loseBackground', './/IMG/loseScreenBackground.png');
+        Game.load.image('buttonTemplate', './/IMG/buttonTemplate.png');
     },
 
 
@@ -66,7 +70,6 @@ const level1State = {
 
         //Create pause and start buttons
         this.createPausePlayButton('pauseButton');
-
     },
 
     //Functions for create
@@ -292,18 +295,22 @@ const level1State = {
         }
     },
     endGame: function () {
-        // this.enemyTroops.children.forEach(enemy => {
-        //     enemy.body.velocity = 0;
-        // })
+        this.enemyTroops.children.forEach(enemy => {
+            enemy.body.velocity = 0;
+        })
+        Game.paused = true;
+        // Game.camera.fade('#000000', 1000, true, 0.7);
 
-        Game.camera.fade('#000000', 1000, true, 0.7);
+        // Game.camera.onFadeComplete.add(() => {
+        //     Game.world.removeAll();
+        //     this.laodLoseScreen();
+        // });
 
-        Game.camera.onFadeComplete.add(() => Game.state.start('LoseScreen', false));
-
-        // setTimeout(function () {
-        //     Game.state.start('LoseScreen', false, false);
-        //     this.gameEnded = true;
-        // }, 1000)
+        // Game.camera.fade();
+        setTimeout(function () {
+            Game.world.removeAll();
+            level1State.laodLoseScreen();
+        }, "1500");
     },
     dragDropTurret: function () {
         this.draggingTurret.position.x = this.input.activePointer.worldX
@@ -314,8 +321,8 @@ const level1State = {
         let currentTypeOfButton = this.key;
         level1State.pauseButton.destroy();
 
-        if(level1State.draggingTurret) {
-            if(level1State.draggingTurret != 0) {
+        if (level1State.draggingTurret) {
+            if (level1State.draggingTurret != 0) {
                 level1State.draggingTurret.destroy();
             }
         }
@@ -329,6 +336,27 @@ const level1State = {
         } else {
             console.log('unknownTypeOfButton');
         }
+    },
+    laodLoseScreen: function () {
+        let background = Game.add.sprite(Game.width / 2, Game.height / 2, 'loseBackground');
+        background.anchor.setTo(0.5);
+        Game.add.text(Game.width / 2 + 5, 256, 'You lost', {'fontSize': 82, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 18}).anchor.setTo(0.5);
+
+
+        let restartButton = Game.add.button(Game.width / 2, 590, 'buttonTemplate');
+        restartButton.width = 410;
+        restartButton.height = 120;
+        restartButton.anchor.setTo(0.5);
+
+        Game.add.text(Game.width / 2 + 5, 590, 'Restart', {'fontSize': 48, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 12}).anchor.setTo(0.5);
+
+
+        let levelsButton = Game.add.button(Game.width / 2, 750, 'buttonTemplate');
+        levelsButton.width = 260;
+        levelsButton.height = 80;
+        levelsButton.anchor.setTo(0.5);
+        
+        Game.add.text(Game.width / 2 + 3, 750, 'Levels', {'fontSize': 30, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#61461b', 'strokeThickness': 8}).anchor.setTo(0.5);
     },
 
 

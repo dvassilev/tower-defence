@@ -9,4 +9,4 @@ Game.state.add('Level2', level2State);
 Game.state.add('WinScreen', winScreenState);
 Game.state.add('LoseScreen', loseScreenState);
 
-Game.state.start('Level1');
+Game.state.start('Levels');
