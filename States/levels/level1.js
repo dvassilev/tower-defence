@@ -28,6 +28,10 @@ const level1State = {
         //Load hearts
         Game.load.image('fullLive', './/IMG/fullLive.png');
         Game.load.image('emptyLive', './/IMG/takenLive.png');
+
+        //Load pause and start buttons
+        Game.load.image('pauseButton', './/IMG/pauseButton.png');
+        Game.load.image('playButton', './/IMG/playButton.png');
     },
 
 
@@ -52,13 +56,16 @@ const level1State = {
         }
 
         //Create turrets
-        for(let i = 0; i<this.turretsThisLevel.length; i++) {
+        for (let i = 0; i < this.turretsThisLevel.length; i++) {
             let currentRow = 5 + i;
 
             this.createTurretBases(32, currentRow, this.turretsThisLevel[i]);
         }
 
         Game.input.onDown.add(this.clickHandler);
+
+        //Create pause and start buttons
+        this.createPausePlayButton('pauseButton');
 
     },
 
@@ -109,20 +116,27 @@ const level1State = {
         currentBase.height = 64;
     },
     createTurret: function () {
-        if(level1State.draggingTurret) {
-            if(level1State.draggingTurret.currentlyDragging) {
-                level1State.draggingTurret.destroy();
-            } 
+        if (!Game.paused) {
+            if (level1State.draggingTurret) {
+                if (level1State.draggingTurret.currentlyDragging) {
+                    level1State.draggingTurret.destroy();
+                }
+            }
+
+            let key = this.key.replace('Base', '');
+            level1State.draggingTurret = Game.add.sprite(Game.input.x, Game.input.y, key);
+            level1State.draggingTurret.width = 64;
+            level1State.draggingTurret.height = 64;
+            level1State.draggingTurret.anchor.setTo(0.5);
+            level1State.draggingTurret.currentlyDragging = true;
         }
-
-        let key = this.key.replace('Base', '');
-        level1State.draggingTurret = Game.add.sprite(Game.input.x, Game.input.y, key);
-        level1State.draggingTurret.width = 64;
-        level1State.draggingTurret.height = 64;
-        level1State.draggingTurret.anchor.setTo(0.5);
-        level1State.draggingTurret.currentlyDragging = true;
     },
-
+    createPausePlayButton: function (type) {
+        this.pauseButton = Game.add.button(20 * 64 + 32, 32, type, this.onPauseButtonClick);
+        this.pauseButton.anchor.setTo(0.5);
+        this.pauseButton.width = 56;
+        this.pauseButton.height = 56
+    },
 
 
 
@@ -295,6 +309,26 @@ const level1State = {
         this.draggingTurret.position.x = this.input.activePointer.worldX
         this.draggingTurret.position.y = this.input.activePointer.worldY
         this.draggingTurret.currentlyDragging = true;
+    },
+    onPauseButtonClick: function () {
+        let currentTypeOfButton = this.key;
+        level1State.pauseButton.destroy();
+
+        if(level1State.draggingTurret) {
+            if(level1State.draggingTurret != 0) {
+                level1State.draggingTurret.destroy();
+            }
+        }
+
+        if (currentTypeOfButton == 'pauseButton') {
+            level1State.createPausePlayButton('playButton');
+            Game.paused = true;
+        } else if (currentTypeOfButton == 'playButton') {
+            level1State.createPausePlayButton('pauseButton');
+            Game.paused = false;
+        } else {
+            console.log('unknownTypeOfButton');
+        }
     },
 
 
