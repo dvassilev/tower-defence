@@ -17,6 +17,9 @@ const level1State = {
         Game.load.spritesheet('singleRocketTower', './/IMG/Tiles PNG/towerDefense_tile206.png');
         Game.load.spritesheet('bulletTower', './/IMG/Tiles PNG/towerDefense_tile203.png');
 
+        //Load bullets
+        Game.load.image('basicBullet', './/IMG/Tiles PNG/towerDefense_tile275.png')
+
         //Load turrets bases
         Game.load.image('bulletTowerBase', './/IMG/Turrets Bases/bulletBase.png');
         Game.load.image('doubleRocketTowerBase', './/IMG/Turrets Bases/doubleRocketTower.png');
@@ -60,6 +63,8 @@ const level1State = {
         }
 
         //Create turrets
+        this.activeTurrets = Game.add.group();
+
         for (let i = 0; i < this.turretsThisLevel.length; i++) {
             let currentRow = 5 + i;
 
@@ -70,6 +75,9 @@ const level1State = {
 
         //Create pause and start buttons
         this.createPausePlayButton('pauseButton');
+
+        //Create bullets group
+        this.bulletsOnScreen = Game.add.group();
     },
 
     //Functions for create
@@ -132,6 +140,8 @@ const level1State = {
             level1State.draggingTurret.height = 64;
             level1State.draggingTurret.anchor.setTo(0.5);
             level1State.draggingTurret.currentlyDragging = true;
+
+            level1State.activeTurrets.add(level1State.draggingTurret);
         }
     },
     createPausePlayButton: function (type) {
@@ -140,26 +150,33 @@ const level1State = {
         this.pauseButton.width = 56;
         this.pauseButton.height = 56
     },
+    spawnBullet: function (turretX, turretY) {
+        level1State.bulletsOnScreen.create(turretX, turretY, 'basicTurret');
+    },
 
 
 
 
     update: function () {
-        if (!this.gameEnded) {
-            //Check if the furthest enemy is in the world
-            this.ifEnemyInWorld();
+        //Check if the furthest enemy is in the world
+        this.ifEnemyInWorld();
 
-            //Make enemy troops collide with the map
-            Game.physics.arcade.collide(level1State.enemyTroops, pathOutlinesLayer, this.changeDirection);
+        //Make enemy troops collide with the map
+        Game.physics.arcade.collide(level1State.enemyTroops, pathOutlinesLayer, this.changeDirection);
 
-            if (level1State.draggingTurret) {
-                if (level1State.draggingTurret.currentlyDragging) {
-                    this.dragDropTurret();
-                }
+        if (level1State.draggingTurret) {
+            if (level1State.draggingTurret.currentlyDragging) {
+                this.dragDropTurret();
             }
-        } else {
-            console.log('Game just ended')
         }
+
+        //Rotate turrets to former target
+        this.activeTurrets.children.forEach((child) => {
+            let formerTarget = this.enemyTroops.children[0];
+
+            child.rotation = Game.physics.arcade.angleBetween(child, formerTarget) + 1.6;
+        })
+
     },
 
 
@@ -297,17 +314,11 @@ const level1State = {
     endGame: function () {
         this.enemyTroops.children.forEach(enemy => {
             enemy.body.velocity = 0;
-        })
-        Game.paused = true;
-        // Game.camera.fade('#000000', 1000, true, 0.7);
-
-        // Game.camera.onFadeComplete.add(() => {
-        //     Game.world.removeAll();
-        //     this.laodLoseScreen();
-        // });
-
-        // Game.camera.fade();
+        });
+        
+        Game.camera.fade('#000000', 1500, true, 0.7);
         setTimeout(function () {
+            Game.camera.resetFX();
             Game.world.removeAll();
             level1State.laodLoseScreen();
         }, "1500");
@@ -322,7 +333,7 @@ const level1State = {
         level1State.pauseButton.destroy();
 
         if (level1State.draggingTurret) {
-            if (level1State.draggingTurret != 0) {
+            if (level1State.draggingTurret.currentlyDragging) {
                 level1State.draggingTurret.destroy();
             }
         }
@@ -340,23 +351,25 @@ const level1State = {
     laodLoseScreen: function () {
         let background = Game.add.sprite(Game.width / 2, Game.height / 2, 'loseBackground');
         background.anchor.setTo(0.5);
-        Game.add.text(Game.width / 2 + 5, 256, 'You lost', {'fontSize': 82, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 18}).anchor.setTo(0.5);
+        Game.add.text(Game.width / 2 + 5, 256, 'You lost', { 'fontSize': 82, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 18 }).anchor.setTo(0.5);
 
 
-        let restartButton = Game.add.button(Game.width / 2, 590, 'buttonTemplate');
+        let restartButton = Game.add.button(Game.width / 2, 590, 'buttonTemplate', () => {
+            Game.state.start(Game.state.current);
+        });
         restartButton.width = 410;
         restartButton.height = 120;
         restartButton.anchor.setTo(0.5);
 
-        Game.add.text(Game.width / 2 + 5, 590, 'Restart', {'fontSize': 48, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 12}).anchor.setTo(0.5);
+        Game.add.text(Game.width / 2 + 5, 590, 'Restart', { 'fontSize': 48, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#104726', 'strokeThickness': 12 }).anchor.setTo(0.5);
 
 
-        let levelsButton = Game.add.button(Game.width / 2, 750, 'buttonTemplate');
+        let levelsButton = Game.add.button(Game.width / 2, 750, 'buttonTemplate', () => Game.state.start('Levels'));
         levelsButton.width = 260;
         levelsButton.height = 80;
         levelsButton.anchor.setTo(0.5);
-        
-        Game.add.text(Game.width / 2 + 3, 750, 'Levels', {'fontSize': 30, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#61461b', 'strokeThickness': 8}).anchor.setTo(0.5);
+
+        Game.add.text(Game.width / 2 + 3, 750, 'Levels', { 'fontSize': 30, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#61461b', 'strokeThickness': 8 }).anchor.setTo(0.5);
     },
 
 

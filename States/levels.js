@@ -40,5 +40,5 @@ const levelsState = {
 
     },
 
-    levels: ['Level1', 'Level2', 'unloadedLevelIcon'],
+    levels: ['Level1', 'unloadedLevelIcon'],
 }
