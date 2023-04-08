@@ -18,7 +18,8 @@ const level1State = {
         Game.load.spritesheet('bulletTower', './/IMG/Tiles PNG/towerDefense_tile203.png');
 
         //Load bullets
-        Game.load.image('basicBullet', './/IMG/Tiles PNG/towerDefense_tile275.png')
+        Game.load.image('rocketBullet', './/IMG/Tiles PNG/towerDefense_tile252.png');
+        Game.load.image('basicBullet', './/IMG/Tiles PNG/towerDefense_tile275.png');
 
         //Load turrets bases
         Game.load.image('bulletTowerBase', './/IMG/Turrets Bases/bulletBase.png');
@@ -62,8 +63,8 @@ const level1State = {
             this.createHeart(i * 64, 0, 'full');
         }
 
-        //Create turrets
-        this.activeTurrets = Game.add.group();
+        //Create turrets bases
+        this.turretsBases = Game.add.group();
 
         for (let i = 0; i < this.turretsThisLevel.length; i++) {
             let currentRow = 5 + i;
@@ -71,13 +72,16 @@ const level1State = {
             this.createTurretBases(32, currentRow, this.turretsThisLevel[i]);
         }
 
-        Game.input.onDown.add(this.clickHandler);
+        //Create turrets group
+        this.activeTurrets = Game.add.group();
 
         //Create pause and start buttons
         this.createPausePlayButton('pauseButton');
 
         //Create bullets group
         this.bulletsOnScreen = Game.add.group();
+
+        Game.input.onDown.add(this.checkIfTurretShouldBePlaced);
     },
 
     //Functions for create
@@ -125,24 +129,31 @@ const level1State = {
         currentBase.anchor.setTo(0.5);
         currentBase.width = 64;
         currentBase.height = 64;
+
+        level1State.turretsBases.add(currentBase);
     },
     createTurret: function () {
-        if (!Game.paused) {
-            if (level1State.draggingTurret) {
-                if (level1State.draggingTurret.currentlyDragging) {
-                    level1State.draggingTurret.destroy();
-                }
+        if (level1State.draggingTurret) {
+            if (level1State.draggingTurret.currentlyDragging) {
+                level1State.draggingTurret.destroy();
             }
-
-            let key = this.key.replace('Base', '');
-            level1State.draggingTurret = Game.add.sprite(Game.input.x, Game.input.y, key);
-            level1State.draggingTurret.width = 64;
-            level1State.draggingTurret.height = 64;
-            level1State.draggingTurret.anchor.setTo(0.5);
-            level1State.draggingTurret.currentlyDragging = true;
-
-            level1State.activeTurrets.add(level1State.draggingTurret);
         }
+
+        let key = this.key.replace('Base', '');
+        let currentTurret = level1State.draggingTurret = Game.add.sprite(Game.input.x, Game.input.y, key);
+        currentTurret.width = 64;
+        currentTurret.height = 64;
+        currentTurret.anchor.setTo(0.5);
+
+        currentTurret.shootBullet = function (turret) {
+            level1State.spawnBullet(turret.position.x, turret.position.y, turret.key);
+
+            setTimeout(turret.shootBullet, 3000, turret);
+        };
+        currentTurret.currentlyDragging = true;
+        currentTurret.activeBullets = Game.add.group();
+
+        level1State.activeTurrets.add(currentTurret);
     },
     createPausePlayButton: function (type) {
         this.pauseButton = Game.add.button(20 * 64 + 32, 32, type, this.onPauseButtonClick);
@@ -150,8 +161,26 @@ const level1State = {
         this.pauseButton.width = 56;
         this.pauseButton.height = 56
     },
-    spawnBullet: function (turretX, turretY) {
-        level1State.bulletsOnScreen.create(turretX, turretY, 'basicTurret');
+    spawnBullet: function (turretX, turretY, turretType) {
+        let currentBulletType;
+
+        if (turretType == 'greenTower') {
+            currentBulletType = 'basicBullet';
+        } else if (turretType == 'singleRocketTower') {
+            currentBulletType = 'rocketBullet';
+        } else {
+            console.log('unexisting type of turret');
+        }
+
+        if (currentBulletType != undefined) {
+            let currentBullet = level1State.bulletsOnScreen.create(turretX, turretY, currentBulletType);
+            currentBullet.anchor.setTo(0.5);
+            Game.physics.enable(currentBullet);
+
+            level1State.bulletsOnScreen.add(currentBullet);
+        }
+
+        console.log('new bullet')
     },
 
 
@@ -170,13 +199,25 @@ const level1State = {
             }
         }
 
-        //Rotate turrets to former target
-        this.activeTurrets.children.forEach((child) => {
-            let formerTarget = this.enemyTroops.children[0];
+        //Rotate turrets
+        if (this.activeTurrets.children.length > 0) {
+            this.activeTurrets.forEach((turret) => {
 
-            child.rotation = Game.physics.arcade.angleBetween(child, formerTarget) + 1.6;
-        })
+                if (!turret.currentlyDragging) {
+                    let formerTarget = level1State.enemyTroops.children[0];
+                    turret.rotation = Game.physics.arcade.angleBetween(turret, formerTarget) + 1.6;
+                }
+            });
+        }
 
+        //Make the bullets follow the former target and collide with the former target
+        if(this.bulletsOnScreen.children.length > 0) {
+            this.bulletsOnScreen.children.forEach((bullet) => {
+                Game.physics.arcade.moveToObject(bullet, level1State.enemyTroops.children[0], 200, 70);
+            });
+
+            Game.physics.arcade.overlap(this.bulletsOnScreen, level1State.enemyTroops.children[0], level1State.onBulletReachingTarget);
+        }
     },
 
 
@@ -297,16 +338,18 @@ const level1State = {
             this.endGame();
         }
     },
-    clickHandler: function () {
+    checkIfTurretShouldBePlaced: function () {
         let pointerX = Game.input.mousePointer.x;
         let pointerY = Game.input.mousePointer.y;
 
         if (level1State.checkIfInCollidingLayer(pointerX, pointerY, level1State.turretLayerData)) {
             if (level1State.draggingTurret) {
                 if (level1State.draggingTurret.currentlyDragging) {
-                    level1State.draggingTurret.position.x = pointerX - (pointerX % 64) + 32;
-                    level1State.draggingTurret.position.y = pointerY - (pointerY % 64) + 32;
+                    level1State.draggingTurret.position.x = (pointerX - (pointerX % 64) + 32);
+                    level1State.draggingTurret.position.y = (pointerY - (pointerY % 64) + 32);
+
                     level1State.draggingTurret.currentlyDragging = false;
+                    level1State.draggingTurret.shootBullet(level1State.draggingTurret);
                 }
             }
         }
@@ -315,7 +358,7 @@ const level1State = {
         this.enemyTroops.children.forEach(enemy => {
             enemy.body.velocity = 0;
         });
-        
+
         Game.camera.fade('#000000', 1500, true, 0.7);
         setTimeout(function () {
             Game.camera.resetFX();
@@ -339,13 +382,19 @@ const level1State = {
         }
 
         if (currentTypeOfButton == 'pauseButton') {
+            level1State.turretsBases.children.forEach(base => {
+                base.inputEnabled = false;
+            });
+
             level1State.createPausePlayButton('playButton');
             Game.paused = true;
         } else if (currentTypeOfButton == 'playButton') {
+            level1State.turretsBases.children.forEach(base => {
+                base.inputEnabled = true;
+            });
+
             level1State.createPausePlayButton('pauseButton');
             Game.paused = false;
-        } else {
-            console.log('unknownTypeOfButton');
         }
     },
     laodLoseScreen: function () {
@@ -370,6 +419,12 @@ const level1State = {
         levelsButton.anchor.setTo(0.5);
 
         Game.add.text(Game.width / 2 + 3, 750, 'Levels', { 'fontSize': 30, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#61461b', 'strokeThickness': 8 }).anchor.setTo(0.5);
+    },
+    onBulletReachingTarget: function() {
+        let troop = arguments[0];
+        let bullet = arguments[1];
+
+        bullet.destroy();
     },
 
 
