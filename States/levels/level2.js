@@ -487,9 +487,9 @@ const level2State = {
                     level2State.bulletsOnScreen.children.forEach((bullet) => {
                         if (bullet.key == 'rocketBullet') {
                             bullet.rotation = Game.physics.arcade.angleBetween(bullet, formerTarget) + (Math.PI / 2);
-                            Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 70);
+                            Game.physics.arcade.moveToObject(bullet, formerTarget, 110);
                         } else if (bullet.key == 'basicBullet' || bullet == 'smallBullet') {
-                            Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 70);
+                            Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 200);
                         }
                     });
 
@@ -672,6 +672,12 @@ const level2State = {
 
             level2State.disableOrEnableBases('enable');
             level2State.interWavesState = false;
+
+            level2State.activeTurrets.children.forEach((turret) => {
+                if(turret.key == 'singleRocketTower') {
+                    turret.shootBullet(turret);
+                }
+            });
         }, 3000);
     },
     dragDropTurret: function () {
@@ -975,7 +981,7 @@ const level2State = {
     },
     //Map is 14x21
     gameDirection: 'right',
-    enemyTroopsSpeed: 1000,
+    enemyTroopsSpeed: 100,
     troopsPerWave: [1],
     troopsStartingHeight: 11,
     troopsStartingWidth: -1,
