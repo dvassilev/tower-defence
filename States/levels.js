@@ -1,12 +1,12 @@
 'use strict'
-let level1icon, level2icon, unloadedLevel;
-let level1;
+let level1icon, level2icon, level3icon, unloadedLevel;
 
 const levelsState = {
     preload: function () {
         Game.load.image('background', '../IMG/Backgrounds/levelsBackground.png');
         Game.load.image('Level1', '../IMG/Levels/level1Logo.png');
         Game.load.image('Level2', '../IMG/Levels/level2Logo.png');
+        Game.load.image('Level3', '../IMG/Levels/level3Logo.png');
         Game.load.image('unloadedLevelIcon', '../IMG/Levels/lockedlevelLogo.png');
     },
 
@@ -40,5 +40,5 @@ const levelsState = {
 
     },
 
-    levels: ['Level1', 'Level2', 'unloadedLevelIcon'],
+    levels: ['Level1', 'Level2', 'Level3', 'unloadedLevelIcon'],
 }

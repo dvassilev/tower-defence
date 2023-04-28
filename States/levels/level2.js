@@ -74,8 +74,8 @@ const level2State = {
             level2State.enemyTroops = Game.add.group();
 
             for (let i = 0; i < level2State.troopsPerWave[level2State.currentWave]; i++) {
-                let troopsStartingHeight = 11;
-                let troopsStartingWidth;
+                let troopsStartingHeight = level2State.troopsStartingHeight;
+                let troopsStartingWidth = level2State.troopsStartingWidth;
 
                 if (level2State.gameDirection == 'left') {
                     level2State.createEnemyTroop(21 * 64 + i * 90, troopsStartingHeight * 64 - 32, 270);
@@ -131,7 +131,7 @@ const level2State = {
         this.map.createLayer('path');
         this.map.setCollisionByExclusion([]);
 
-        pathOutlinesLayer = this.map.createLayer('pathOutlines');
+        level2State.pathOutlinesLayer = this.map.createLayer('pathOutlines');
         this.map.createLayer('decoration');
 
         this.turretsLayer = this.map.createLayer('turrets');
@@ -447,7 +447,7 @@ const level2State = {
             level2State.ifEnemyInWorld();
 
             //Make enemy troops collide with the map
-            Game.physics.arcade.collide(level2State.enemyTroops, pathOutlinesLayer, level2State.changeDirection);
+            Game.physics.arcade.collide(level2State.enemyTroops, level2State.pathOutlinesLayer, level2State.changeDirection);
 
             //Make the healthbar follow the former target
             if (level2State.enemyTroops.children[0]) {
@@ -654,7 +654,20 @@ const level2State = {
             level2State.waveNumberText.destroy();
 
             for (let i = 0; i < level2State.troopsPerWave[level2State.currentWave]; i++) {
-                level2State.createEnemyTroop(-i * 90 - 64, 11);
+                let troopsStartingHeight = level2State.troopsStartingHeight;
+                let troopsStartingWidth = level2State.troopsStartingWidth;
+
+                if (level2State.gameDirection == 'left') {
+                    level2State.createEnemyTroop(21 * 64 + i * 90, troopsStartingHeight * 64 - 32, 270);
+                } else if (level2State.gameDirection == 'right') {
+                    level2State.createEnemyTroop(-1 * 64 - i * 90, troopsStartingHeight * 64 - 32, 90);
+                } else if (level2State.gameDirection == 'up') {
+                    level2State.createEnemyTroop(troopsStartingWidth * 64 - 32, 14 * 64 + i * 90, 0);
+                } else if (level2State.gameDirection == 'down') {
+                    level2State.createEnemyTroop(troopsStartingWidth * 64 - 32, -1 * 64 - i * 90, 180);
+                } else {
+                    console.log('unexisting direction');
+                }
             }
 
             level2State.disableOrEnableBases('enable');
@@ -871,7 +884,7 @@ const level2State = {
         let avaliableLevelsLength = levelsState.levels.length - 1;
         let currentLevel = Game.state.getCurrentState().key.replace('Level', '');
 
-        if (currentLevel + 1 <= avaliableLevelsLength) {
+        if (Number(currentLevel) + 1 <= Number(avaliableLevelsLength)) {
             let nextLevelButton = Game.add.button(Game.width / 2, 590, 'buttonTemplate', () => {
                 Game.state.start(Game.state.current);
             });
@@ -963,6 +976,8 @@ const level2State = {
     //Map is 14x21
     gameDirection: 'right',
     enemyTroopsSpeed: 1000,
-    troopsPerWave: [5],
+    troopsPerWave: [1],
+    troopsStartingHeight: 11,
+    troopsStartingWidth: -1,
     turretsThisLevel: ['greenTowerBase', 'redTowerBase', 'bulletTowerBase', 'singleRocketTowerBase'],
 }
