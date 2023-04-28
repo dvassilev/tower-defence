@@ -12,43 +12,43 @@ const level1State = {
         Game.load.image('enemy-troop-1', '../IMG/enemy-troop-1.png');
 
         //Load turrets
-        Game.load.image('redTower', './/IMG/Turrets/towerDefense_tile250.png');
-        Game.load.image('greenTower', './/IMG/Turrets/towerDefense_tile249.png');
-        Game.load.image('doubleRocketTower', './/IMG/Turrets/towerDefense_tile205.png');
-        Game.load.image('singleRocketTower', './/IMG/Turrets/towerDefense_tile206.png');
-        Game.load.image('bulletTower', './/IMG/Turrets/towerDefense_tile203.png');
+        Game.load.image('redTower', '../IMG/Turrets/towerDefense_tile250.png');
+        Game.load.image('greenTower', '../IMG/Turrets/towerDefense_tile249.png');
+        Game.load.image('doubleRocketTower', '../IMG/Turrets/towerDefense_tile205.png');
+        Game.load.image('singleRocketTower', '../IMG/Turrets/towerDefense_tile206.png');
+        Game.load.image('bulletTower', '../IMG/Turrets/towerDefense_tile203.png');
 
         //Load health bar
-        Game.load.image('fullHealthBar', './/IMG/fullHealthBar.png');
-        Game.load.image('emptyHealthBar', './/IMG/emptyHealthBar.png');
+        Game.load.image('fullHealthBar', '../IMG/fullHealthBar.png');
+        Game.load.image('emptyHealthBar', '../IMG/emptyHealthBar.png');
 
         //Load bullets
-        Game.load.image('rocketBullet', './/IMG/Bullets/towerDefense_tile252.png');
-        Game.load.image('basicBullet', './/IMG/Bullets/towerDefense_tile275.png');
-        Game.load.image('smallBullet', './/IMG/Bullets/towerDefense_tile274.png');
+        Game.load.image('rocketBullet', '../IMG/Bullets/towerDefense_tile252.png');
+        Game.load.image('basicBullet', '../IMG/Bullets/towerDefense_tile275.png');
+        Game.load.image('smallBullet', '../IMG/Bullets/towerDefense_tile274.png');
 
 
         //Load turrets bases
-        Game.load.image('bulletTowerBase', './/IMG/Turrets Bases/bulletBase.png');
-        Game.load.image('doubleRocketTowerBase', './/IMG/Turrets Bases/doubleRocketTower.png');
-        Game.load.image('greenTowerBase', './/IMG/Turrets Bases/greenTowerBase.png');
-        Game.load.image('redTowerBase', './/IMG/Turrets Bases/redTowerBase.png');
-        Game.load.image('singleRocketTowerBase', './/IMG/Turrets Bases/singleRocketBase.png');
+        Game.load.image('bulletTowerBase', '../IMG/Turrets Bases/bulletBase.png');
+        Game.load.image('doubleRocketTowerBase', '../IMG/Turrets Bases/doubleRocketTower.png');
+        Game.load.image('greenTowerBase', '../IMG/Turrets Bases/greenTowerBase.png');
+        Game.load.image('redTowerBase', '../IMG/Turrets Bases/redTowerBase.png');
+        Game.load.image('singleRocketTowerBase', '../IMG/Turrets Bases/singleRocketBase.png');
 
 
         //Load hearts and coin
-        Game.load.image('fullLive', './/IMG/fullLive.png');
-        Game.load.image('emptyLive', './/IMG/takenLive.png');
-        Game.load.image('coin', './/IMG/coin.png');
+        Game.load.image('fullLive', '../IMG/fullLive.png');
+        Game.load.image('emptyLive', '../IMG/takenLive.png');
+        Game.load.image('coin', '../IMG/coin.png');
 
         //Load pause and start buttons
-        Game.load.image('pauseButton', './/IMG/Buttons/pauseButton.png');
-        Game.load.image('playButton', './/IMG/Buttons/playButton.png');
+        Game.load.image('pauseButton', '../IMG/Buttons/pauseButton.png');
+        Game.load.image('playButton', '../IMG/Buttons/playButton.png');
 
         //Load lose and win screen atributes
-        Game.load.image('loseBackground', './/IMG/Backgrounds/loseScreenBackground.png');
-        Game.load.image('winBackground', './/IMG/Backgrounds/winScreenBackground.png');
-        Game.load.image('buttonTemplate', './/IMG/Buttons/buttonTemplate.png');
+        Game.load.image('loseBackground', '../IMG/Backgrounds/loseScreenBackground.png');
+        Game.load.image('winBackground', '../IMG/Backgrounds/winScreenBackground.png');
+        Game.load.image('buttonTemplate', '../IMG/Buttons/buttonTemplate.png');
 
     },
 
@@ -172,8 +172,10 @@ const level1State = {
         currentBase.height = 64;
 
 
+
         //Add the cost of each turret
         currentBase.price = level1State.determineTurretCost(currentBase.key);
+        level1State.checkIfShouldBeTinted(currentBase);
 
         currentBase.priceTag = Game.add.text(64, startingTileHeightNumber * 64 - 38, currentBase.price, { 'fontSize': 12, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#000000', 'strokeThickness': 2 });
         currentBase.coinSymbol = Game.add.sprite(64 + 25, startingTileHeightNumber * 64 - 38, 'coin');
@@ -181,6 +183,18 @@ const level1State = {
         currentBase.coinSymbol.height = 13;
 
         level1State.turretsBases.add(currentBase);
+    },
+    checkIfShouldBeTinted: function (base) {
+        if (level1State.avaliableMoney >= base.price) {
+            base.tint = 0xffffff;
+        } else {
+            base.tint = 0x5e6464;
+        }
+    },
+    checkEveryBaseForTint: function() {
+        level1State.turretsBases.children.forEach((base) => {
+            level1State.checkIfShouldBeTinted(base);
+        });
     },
     createTurret: function () {
         if (level1State.avaliableMoney >= this.price) {
@@ -824,14 +838,15 @@ const level1State = {
 
         Game.add.text(Game.width / 2 + 3, 750, 'Levels', { 'fontSize': 30, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#61461b', 'strokeThickness': 8 }).anchor.setTo(0.5);
     },
-    updateMoney: function(amount, toDo) {
-        if(toDo == 'add') {
+    updateMoney: function (amount, toDo) {
+        if (toDo == 'add') {
             level1State.avaliableMoney += amount
-        } else if(toDo == 'remove') {
+        } else if (toDo == 'remove') {
             level1State.avaliableMoney -= amount;
         }
 
         level1State.moneyOnScreen.text = level1State.avaliableMoney;
+        level1State.checkEveryBaseForTint();
     },
 
 
@@ -889,6 +904,6 @@ const level1State = {
     gameDirection: 'right',
     enemyTroopsSpeed: 1000,
     troopsPerWave: [5],
-    turretsThisLevel: ['greenTowerBase', 'redTowerBase', 'bulletTowerBase', 'singleRocketTowerBase', 'doubleRocketTowerBase',],
+    turretsThisLevel: ['greenTowerBase', 'redTowerBase', 'bulletTowerBase', 'singleRocketTowerBase'],
 
 }
