@@ -5,7 +5,7 @@ let pathOutlinesLayer;
 const level1State = {
     preload: function () {
         //Load map
-        Game.load.tilemap('game-map', '../Maps/map.json', null, Phaser.Tilemap.TILED_JSON);
+        Game.load.tilemap('game-map', '../Maps/Level1/map.json', null, Phaser.Tilemap.TILED_JSON);
         Game.load.image('map-tileset', '../Maps/map-tilesheet.png');
 
         //Load enemy troops
@@ -76,7 +76,20 @@ const level1State = {
             level1State.enemyTroops = Game.add.group();
 
             for (let i = 0; i < level1State.troopsPerWave[level1State.currentWave]; i++) {
-                level1State.createEnemyTroop(-i * 90 - 64, 11);
+                let troopsStartingHeight = 11;
+                let troopsStartingWidth;
+
+                if (level1State.gameDirection == 'left') {
+                    level1State.createEnemyTroop(21 * 64 + i * 90, troopsStartingHeight * 64 - 32, 270);
+                } else if (level1State.gameDirection == 'right') {
+                    level1State.createEnemyTroop(-1 * 64 - i * 90, troopsStartingHeight * 64 - 32, 90);
+                } else if (level1State.gameDirection == 'up') {
+                    level1State.createEnemyTroop(troopsStartingWidth * 64 - 32, 14 * 64 + i * 90, 0);
+                } else if (level1State.gameDirection == 'down') {
+                    level1State.createEnemyTroop(troopsStartingWidth * 64 - 32, -1 * 64 - i * 90, 180);
+                } else {
+                    console.log('unexisting direction');
+                }
             }
 
             //Add lives
@@ -136,17 +149,28 @@ const level1State = {
         level1State.newWaveText = newWaveText;
         level1State.waveNumberText = waveNumberText;
     },
-    createEnemyTroop: function (Xpositions, startingTileHeightNumber) {
-        let troop = level1State.enemyTroops.create(Xpositions, startingTileHeightNumber * 64 - 32, 'enemy-troop-1');
+    createEnemyTroop: function (Xpositions, Yposition, angle) {
+        let troop = level1State.enemyTroops.create(Xpositions, Yposition, 'enemy-troop-1');
         troop.anchor.setTo(0.5);
         troop.width = 64;
         troop.height = 64;
-        troop.angle = 90;
+        troop.angle = angle;
         troop.health = 100;
 
         troop.direction = this.gameDirection;
         Game.physics.enable(troop);
-        troop.body.velocity.x = this.enemyTroopsSpeed;
+
+        if (level1State.gameDirection == 'left') {
+            troop.body.velocity.x = -level1State.enemyTroopsSpeed;
+        } else if (level1State.gameDirection == 'right') {
+            troop.body.velocity.x = level1State.enemyTroopsSpeed;
+        } else if (level1State.gameDirection == 'up') {
+            troop.body.velocity.y = -level1State.enemyTroopsSpeed;
+        } else if (level1State.gameDirection == 'down') {
+            troop.body.velocity.y = level1State.enemyTroopsSpeed;
+        } else {
+            console.log('wrong direction');
+        }
     },
     createHeart: function (x, y, type) {
         let heart;
@@ -464,7 +488,7 @@ const level1State = {
 
                     level1State.bulletsOnScreen.children.forEach((bullet) => {
                         if (bullet.key == 'rocketBullet') {
-                            bullet.rotation =  Game.physics.arcade.angleBetween(bullet, formerTarget) + (Math.PI / 2);
+                            bullet.rotation = Game.physics.arcade.angleBetween(bullet, formerTarget) + (Math.PI / 2);
                             Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 70);
                         } else if (bullet.key == 'basicBullet' || bullet == 'smallBullet') {
                             Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 70);
@@ -938,6 +962,7 @@ const level1State = {
         "x": 0,
         "y": 0
     },
+    //Map is 14x21
     gameDirection: 'right',
     enemyTroopsSpeed: 1000,
     troopsPerWave: [5],
