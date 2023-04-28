@@ -87,7 +87,7 @@ const level1State = {
             }
 
             //Add money
-            level1State.avaliableMoney = 30;
+            level1State.avaliableMoney = 20;
             level1State.createMoney();
 
             //Create turrets bases
@@ -109,10 +109,9 @@ const level1State = {
             level1State.bulletsOnScreen = Game.add.group();
 
             Game.input.onDown.add(level1State.checkIfTurretShouldBePlaced);
-        }, 1000)
+        }, 3000)
 
     },
-    //Make them 3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     //Functions for create
     createMap: function () {
@@ -191,7 +190,7 @@ const level1State = {
             base.tint = 0x5e6464;
         }
     },
-    checkEveryBaseForTint: function() {
+    checkEveryBaseForTint: function () {
         level1State.turretsBases.children.forEach((base) => {
             level1State.checkIfShouldBeTinted(base);
         });
@@ -237,6 +236,14 @@ const level1State = {
                             }
 
                             setTimeout(turret.shootBullet, 800, turret);
+                        }
+                    };
+                } else if (upcomingTurretKey == 'singleRocketTower') {
+                    currentTurret.shootBullet = function (turret) {
+                        if (level1State.gameIsRunning) {
+                            if (!Game.paused && !level1State.interWavesState) {
+                                level1State.spawnBullet(turret);
+                            }
                         }
                     };
                 }
@@ -375,6 +382,21 @@ const level1State = {
 
             level1State.bulletsOnScreen.add(firstBullet);
             level1State.bulletsOnScreen.add(secondBullet);
+        } else if (turretType == 'singleRocketTower') {
+            let currentBulletType = 'rocketBullet';
+            let turretPlusBallRadius = 32 + 10;
+            let rawAngle = Game.physics.arcade.angleBetween(turret, level1State.enemyTroops.children[0])
+
+            let [spawnX, spawnY] = calculateBasicBulletDifference(turretPlusBallRadius, rawAngle)
+
+            let currentBullet = level1State.bulletsOnScreen.create(turretX + spawnX, turretY + spawnY, currentBulletType);
+            currentBullet.anchor.setTo(0.5);
+            currentBullet.rotation = Game.physics.arcade.angleBetween(turret, level1State.enemyTroops.children[0]) + (Math.PI / 2);
+            Game.physics.enable(currentBullet);
+
+            currentBullet.parentTurret = turret;
+
+            level1State.bulletsOnScreen.add(currentBullet);
         } else {
             console.log('unexisting type of turret');
         }
@@ -438,11 +460,19 @@ const level1State = {
             //Make the bullets follow the former target and collide with the former target
             if (level1State.bulletsOnScreen.children.length > 0) {
                 if (level1State.enemyTroops.children.length > 0) {
+                    let formerTarget = level1State.enemyTroops.children[0];
+
                     level1State.bulletsOnScreen.children.forEach((bullet) => {
-                        Game.physics.arcade.moveToObject(bullet, level1State.enemyTroops.children[0], 200, 70);
+                        if (bullet.key == 'rocketBullet') {
+                            bullet.rotation =  Game.physics.arcade.angleBetween(bullet, formerTarget) + (Math.PI / 2);
+                            Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 70);
+                        } else if (bullet.key == 'basicBullet' || bullet == 'smallBullet') {
+                            Game.physics.arcade.moveToObject(bullet, formerTarget, 200, 70);
+                        }
                     });
+
+                    Game.physics.arcade.overlap(level1State.bulletsOnScreen, formerTarget, level1State.onBulletCollision);
                 }
-                Game.physics.arcade.overlap(level1State.bulletsOnScreen, level1State.enemyTroops.children[0], level1State.onBulletCollision);
             }
 
             //Check for dragging turret
@@ -697,6 +727,13 @@ const level1State = {
                 break;
             case 'smallBullet':
                 bulletDamage = 8;
+                break;
+            case 'rocketBullet':
+                bulletDamage = 30;
+
+                //Fire another rocket
+                let parentTurret = bullet.parentTurret;
+                parentTurret.shootBullet(parentTurret)
                 break;
         }
 
