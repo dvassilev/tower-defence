@@ -12,20 +12,20 @@ const level1State = {
         Game.load.image('enemy-troop-1', '../IMG/enemy-troop-1.png');
 
         //Load turrets
-        Game.load.image('redTower', './/IMG/Tiles PNG/towerDefense_tile250.png');
-        Game.load.image('greenTower', './/IMG/Tiles PNG/towerDefense_tile249.png');
-        Game.load.image('doubleRocketTower', './/IMG/Tiles PNG/towerDefense_tile205.png');
-        Game.load.image('singleRocketTower', './/IMG/Tiles PNG/towerDefense_tile206.png');
-        Game.load.image('bulletTower', './/IMG/Tiles PNG/towerDefense_tile203.png');
+        Game.load.image('redTower', './/IMG/Turrets/towerDefense_tile250.png');
+        Game.load.image('greenTower', './/IMG/Turrets/towerDefense_tile249.png');
+        Game.load.image('doubleRocketTower', './/IMG/Turrets/towerDefense_tile205.png');
+        Game.load.image('singleRocketTower', './/IMG/Turrets/towerDefense_tile206.png');
+        Game.load.image('bulletTower', './/IMG/Turrets/towerDefense_tile203.png');
 
         //Load health bar
         Game.load.image('fullHealthBar', './/IMG/fullHealthBar.png');
         Game.load.image('emptyHealthBar', './/IMG/emptyHealthBar.png');
 
         //Load bullets
-        Game.load.image('rocketBullet', './/IMG/Tiles PNG/towerDefense_tile252.png');
-        Game.load.image('basicBullet', './/IMG/Tiles PNG/towerDefense_tile275.png');
-        Game.load.image('smallBullet', './/IMG/Tiles PNG/towerDefense_tile274.png');
+        Game.load.image('rocketBullet', './/IMG/Bullets/towerDefense_tile252.png');
+        Game.load.image('basicBullet', './/IMG/Bullets/towerDefense_tile275.png');
+        Game.load.image('smallBullet', './/IMG/Bullets/towerDefense_tile274.png');
 
 
         //Load turrets bases
@@ -36,18 +36,19 @@ const level1State = {
         Game.load.image('singleRocketTowerBase', './/IMG/Turrets Bases/singleRocketBase.png');
 
 
-        //Load hearts
+        //Load hearts and coin
         Game.load.image('fullLive', './/IMG/fullLive.png');
         Game.load.image('emptyLive', './/IMG/takenLive.png');
+        Game.load.image('coin', './/IMG/coin.png');
 
         //Load pause and start buttons
-        Game.load.image('pauseButton', './/IMG/pauseButton.png');
-        Game.load.image('playButton', './/IMG/playButton.png');
+        Game.load.image('pauseButton', './/IMG/Buttons/pauseButton.png');
+        Game.load.image('playButton', './/IMG/Buttons/playButton.png');
 
         //Load lose and win screen atributes
-        Game.load.image('loseBackground', './/IMG/loseScreenBackground.png');
-        Game.load.image('winBackground', './/IMG/winScreenBackground.png');
-        Game.load.image('buttonTemplate', './/IMG/buttonTemplate.png');
+        Game.load.image('loseBackground', './/IMG/Backgrounds/loseScreenBackground.png');
+        Game.load.image('winBackground', './/IMG/Backgrounds/winScreenBackground.png');
+        Game.load.image('buttonTemplate', './/IMG/Buttons/buttonTemplate.png');
 
     },
 
@@ -63,13 +64,13 @@ const level1State = {
         this.createNewWaveText(this.currentWave);
         this.gameIsRunning = false;
 
+        //Add the rest of the things after the wave text disappears
         setTimeout(function () {
             level1State.newWaveText.destroy();
             level1State.waveNumberText.destroy();
 
             //Set game as running
             level1State.gameIsRunning = true;
-            level1State.gameIsFinished = false;
 
             // Create and spawn enemy troops
             level1State.enemyTroops = Game.add.group();
@@ -84,6 +85,10 @@ const level1State = {
             for (let i = 0; i < 3; i++) {
                 level1State.createHeart(i * 64, 0, 'full');
             }
+
+            //Add money
+            level1State.avaliableMoney = 30;
+            level1State.createMoney();
 
             //Create turrets bases
             level1State.turretsBases = Game.add.group();
@@ -104,9 +109,10 @@ const level1State = {
             level1State.bulletsOnScreen = Game.add.group();
 
             Game.input.onDown.add(level1State.checkIfTurretShouldBePlaced);
-        }, 3000)
+        }, 1000)
 
     },
+    //Make them 3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     //Functions for create
     createMap: function () {
@@ -165,55 +171,67 @@ const level1State = {
         currentBase.width = 64;
         currentBase.height = 64;
 
+
+        //Add the cost of each turret
+        currentBase.price = level1State.determineTurretCost(currentBase.key);
+
+        currentBase.priceTag = Game.add.text(64, startingTileHeightNumber * 64 - 38, currentBase.price, { 'fontSize': 12, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#000000', 'strokeThickness': 2 });
+        currentBase.coinSymbol = Game.add.sprite(64 + 25, startingTileHeightNumber * 64 - 38, 'coin');
+        currentBase.coinSymbol.width = 15;
+        currentBase.coinSymbol.height = 13;
+
         level1State.turretsBases.add(currentBase);
     },
     createTurret: function () {
-        let upcomingTurretKey = this.key.replace('Base', '');
-        let turretShouldBeCreated = true;
+        if (level1State.avaliableMoney >= this.price) {
+            let upcomingTurretKey = this.key.replace('Base', '');
+            let turretShouldBeCreated = true;
 
-        if (level1State.draggingTurret) {
-            if (level1State.draggingTurret.currentlyDragging) {
-                //Cancel the turret
-                if (level1State.draggingTurret.key == upcomingTurretKey) {
-                    turretShouldBeCreated = false;
+            if (level1State.draggingTurret) {
+                if (level1State.draggingTurret.currentlyDragging) {
+                    //Cancel the turret
+                    if (level1State.draggingTurret.key == upcomingTurretKey) {
+                        turretShouldBeCreated = false;
+                    }
+
+                    level1State.draggingTurret.destroy();
+                    level1State.draggingTurret = null;
+                }
+            }
+
+            if (turretShouldBeCreated) {
+                let currentTurret = level1State.draggingTurret = Game.add.sprite(Game.input.x, Game.input.y, upcomingTurretKey);
+                currentTurret.width = 64;
+                currentTurret.height = 64;
+                currentTurret.anchor.setTo(0.5);
+
+                if (upcomingTurretKey == 'redTower' || upcomingTurretKey == 'greenTower') {
+                    currentTurret.shootBullet = function (turret) {
+                        if (level1State.gameIsRunning) {
+                            if (!Game.paused && !level1State.interWavesState) {
+                                level1State.spawnBullet(turret);
+                            }
+
+                            setTimeout(turret.shootBullet, 3000, turret);
+                        }
+                    };
+                } else if (upcomingTurretKey == 'bulletTower') {
+                    currentTurret.shootBullet = function (turret) {
+                        if (level1State.gameIsRunning) {
+                            if (!Game.paused && !level1State.interWavesState) {
+                                level1State.spawnBullet(turret);
+                            }
+
+                            setTimeout(turret.shootBullet, 800, turret);
+                        }
+                    };
                 }
 
-                level1State.draggingTurret.destroy();
-                level1State.draggingTurret = null;
+                currentTurret.currentlyDragging = true;
+                currentTurret.activeBullets = Game.add.group();
+
+                level1State.activeTurrets.add(currentTurret);
             }
-        }
-
-        if (turretShouldBeCreated) {
-            let currentTurret = level1State.draggingTurret = Game.add.sprite(Game.input.x, Game.input.y, upcomingTurretKey);
-            currentTurret.width = 64;
-            currentTurret.height = 64;
-            currentTurret.anchor.setTo(0.5);
-
-            if (upcomingTurretKey == 'redTower' || upcomingTurretKey == 'greenTower') {
-                currentTurret.shootBullet = function (turret) {
-                    if (level1State.gameIsRunning) {
-                        if (!Game.paused && !level1State.interWavesState) {
-                            level1State.spawnBullet(turret);
-                        }
-
-                        setTimeout(turret.shootBullet, 3000, turret);
-                    }
-                };
-            } else if (upcomingTurretKey == 'bulletTower') {
-                currentTurret.shootBullet = function (turret) {
-                    if (level1State.gameIsRunning) {
-                        if (!Game.paused && !level1State.interWavesState) {
-                            level1State.spawnBullet(turret);
-                        }
-
-                        setTimeout(turret.shootBullet, 800, turret);
-                    }
-                };
-            }
-            currentTurret.currentlyDragging = true;
-            currentTurret.activeBullets = Game.add.group();
-
-            level1State.activeTurrets.add(currentTurret);
         }
     },
     spawnBullet: function (turret) {
@@ -353,42 +371,25 @@ const level1State = {
         level1State.pauseButton.width = 56;
         level1State.pauseButton.height = 56
     },
+    createMoney: function () {
+        //Add the money number
+        level1State.moneyOnScreen = Game.add.text(1 * 64 + 29, 64 + 32, level1State.avaliableMoney, { 'fontSize': 25, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#000000', 'strokeThickness': 5 });
+        level1State.moneyOnScreen.anchor.setTo(0.5);
 
+        //Add the money icon
+        let moneyIcon = Game.add.sprite(0 * 64 + 32, 64 + 32, 'coin');
+        moneyIcon.anchor.setTo(0.5, 0.65);
+        moneyIcon.width = 59;
+        moneyIcon.height = 50;
+    },
 
     update: function () {
         if (level1State.gameIsRunning && !level1State.interWavesState) {
             //Check if the furthest enemy is in the world
-            this.ifEnemyInWorld();
+            level1State.ifEnemyInWorld();
 
             //Make enemy troops collide with the map
-            Game.physics.arcade.collide(level1State.enemyTroops, pathOutlinesLayer, this.changeDirection);
-
-            //Check for dragging turret
-            if (level1State.draggingTurret) {
-                if (level1State.draggingTurret.currentlyDragging) {
-                    this.dragDropTurret();
-                }
-            }
-
-            //Rotate turrets
-            if (this.activeTurrets.children.length > 0) {
-                this.activeTurrets.forEach((turret) => {
-
-                    if (!turret.currentlyDragging) {
-                        let formerTarget = level1State.enemyTroops.children[0];
-                        turret.rotation = Game.physics.arcade.angleBetween(turret, formerTarget) + (Math.PI / 2);
-                    }
-                });
-            }
-
-            //Make the bullets follow the former target and collide with the former target
-            if (this.bulletsOnScreen.children.length > 0) {
-                this.bulletsOnScreen.children.forEach((bullet) => {
-                    Game.physics.arcade.moveToObject(bullet, level1State.enemyTroops.children[0], 200, 70);
-                });
-
-                Game.physics.arcade.overlap(this.bulletsOnScreen, level1State.enemyTroops.children[0], level1State.onBulletCollision);
-            }
+            Game.physics.arcade.collide(level1State.enemyTroops, pathOutlinesLayer, level1State.changeDirection);
 
             //Make the healthbar follow the former target
             if (level1State.enemyTroops.children[0]) {
@@ -404,6 +405,36 @@ const level1State = {
                         emptyHealthBar.position.x = formerTarger.position.x - 32 + fullHealthBar.width;
                         emptyHealthBar.position.y = formerTarger.position.y - (32 + 20);
                     }
+                }
+            }
+
+            //Rotate turrets
+            if (level1State.activeTurrets.children.length > 0) {
+                if (level1State.enemyTroops.children.length > 0) {
+                    level1State.activeTurrets.forEach((turret) => {
+
+                        if (!turret.currentlyDragging) {
+                            let formerTarget = level1State.enemyTroops.children[0];
+                            turret.rotation = Game.physics.arcade.angleBetween(turret, formerTarget) + (Math.PI / 2);
+                        }
+                    });
+                }
+            }
+
+            //Make the bullets follow the former target and collide with the former target
+            if (level1State.bulletsOnScreen.children.length > 0) {
+                if (level1State.enemyTroops.children.length > 0) {
+                    level1State.bulletsOnScreen.children.forEach((bullet) => {
+                        Game.physics.arcade.moveToObject(bullet, level1State.enemyTroops.children[0], 200, 70);
+                    });
+                }
+                Game.physics.arcade.overlap(level1State.bulletsOnScreen, level1State.enemyTroops.children[0], level1State.onBulletCollision);
+            }
+
+            //Check for dragging turret
+            if (level1State.draggingTurret) {
+                if (level1State.draggingTurret.currentlyDragging) {
+                    level1State.dragDropTurret();
                 }
             }
         }
@@ -469,41 +500,52 @@ const level1State = {
         }
     },
     ifEnemyInWorld: function () {
-        let furthestEnemy = this.enemyTroops.children[0];
+        let furthestEnemy = level1State.enemyTroops.children[0];
 
-        if (furthestEnemy != undefined) {
+        if (furthestEnemy) {
             let furthestEnemyX = furthestEnemy.position.x;
             let furthestEnemyY = furthestEnemy.position.y;
 
-
-            if (this.gameDirection == 'right') {
+            if (level1State.gameDirection == 'right') {
                 if (furthestEnemyX - 55 >= Game.width) {
-                    this.removeLive();
-                    level1State.killTroop(furthestEnemy);
+                    level1State.removeLive();
+
+                    if (level1State.gameIsRunning) {
+                        level1State.killTroop(furthestEnemy);
+                    }
                 }
-            } else if (this.gameDirection == 'left') {
+            } else if (level1State.gameDirection == 'left') {
                 if (furthestEnemyX + 64 <= 0) {
-                    this.removeLive();
-                    level1State.killTroop(furthestEnemy);
+                    level1State.removeLive();
+
+                    if (level1State.gameIsRunning) {
+                        level1State.killTroop(furthestEnemy);
+                    }
                 }
-            } else if (this.gameDirection == 'up') {
+            } else if (level1State.gameDirection == 'up') {
                 if (furthestEnemyY + 64 <= 0) {
-                    this.removeLive();
-                    level1State.killTroop(furthestEnemy);
+                    level1State.removeLive();
+
+                    if (level1State.gameIsRunning) {
+                        level1State.killTroop(furthestEnemy);
+                    }
                 }
-            } else if (this.gameDirection == 'down') {
+            } else if (level1State.gameDirection == 'down') {
                 if (furthestEnemyY - 64 >= Game.height) {
-                    this.removeLive();
-                    level1State.killTroop(furthestEnemy);
+                    level1State.removeLive();
+
+                    if (level1State.gameIsRunning) {
+                        level1State.killTroop(furthestEnemy);
+                    }
                 }
 
             }
         }
     },
     removeLive: function () {
-        let lives = this.lives;
+        let lives = level1State.lives;
         let currentLive;
-        let lastLive = false
+        let lastLive = false;
 
         for (let i = lives.children.length - 1; i >= 0; i--) {
             let live = lives.children[i];
@@ -522,19 +564,20 @@ const level1State = {
         let fullLiveY = currentLive.position.y;
 
         currentLive.destroy();
-
-        this.createHeart(fullLiveX, fullLiveY, 'empty');
+        level1State.createHeart(fullLiveX, fullLiveY, 'empty');
 
         if (lastLive) {
-            this.endGame('lose');
+            level1State.endGame('lose');
         }
     },
     prepareNewWave: function () {
         if (level1State.bulletsOnScreen.children.length > 0) {
             level1State.bulletsOnScreen.children.forEach(bullet => {
-                bullet.destroy();
+                bullet.kill();
             })
         }
+
+        level1State.disableOrEnableBases('disable');
 
         this.interWavesState = true;
         this.currentWave++;
@@ -548,6 +591,7 @@ const level1State = {
                 level1State.createEnemyTroop(-i * 90 - 64, 11);
             }
 
+            level1State.disableOrEnableBases('enable');
             level1State.interWavesState = false;
         }, 3000);
     },
@@ -568,9 +612,27 @@ const level1State = {
 
                     level1State.draggingTurret.currentlyDragging = false;
                     level1State.draggingTurret.shootBullet(level1State.draggingTurret);
+                    level1State.updateMoney(level1State.determineTurretCost(level1State.draggingTurret.key), 'remove');
                 }
             }
         }
+    },
+    determineTurretCost: function (type) {
+        let price;
+
+        if (type == 'greenTowerBase' || type == 'greenTower') {
+            price = 10;
+        } else if (type == 'redTowerBase' || type == 'redTower') {
+            price = 20;
+        } else if (type == 'bulletTowerBase' || type == 'bulletTower') {
+            price = 25;
+        } else if (type == 'singleRocketTowerBase' || type == 'singleRocketTower') {
+            price = 30;
+        } else if (type == 'doubleRocketTowerBase' || type == 'doubleRocketTower') {
+            price = 50;
+        }
+
+        return price;
     },
     onPauseButtonClick: function () {
         let currentTypeOfButton = this.key;
@@ -583,19 +645,28 @@ const level1State = {
         }
 
         if (currentTypeOfButton == 'pauseButton') {
-            level1State.turretsBases.children.forEach(base => {
-                base.inputEnabled = false;
-            });
+            level1State.disableOrEnableBases('disable');
 
             level1State.createPausePlayButton('playButton');
             Game.paused = true;
         } else if (currentTypeOfButton == 'playButton') {
-            level1State.turretsBases.children.forEach(base => {
-                base.inputEnabled = true;
-            });
+            level1State.disableOrEnableBases('enable');
 
             level1State.createPausePlayButton('pauseButton');
             Game.paused = false;
+        }
+    },
+    disableOrEnableBases: function (toDo) {
+        if (toDo == 'enable') {
+            level1State.turretsBases.children.forEach(base => {
+                base.inputEnabled = true;
+            });
+        } else if (toDo == 'disable') {
+            level1State.turretsBases.children.forEach(base => {
+                base.inputEnabled = false;
+            });
+        } else {
+            console.log('You have to either enable or disable bases')
         }
     },
     onBulletCollision: function () {
@@ -649,9 +720,14 @@ const level1State = {
         bullet.destroy();
     },
     killTroop: function (currentTroop) {
+        if (currentTroop.fullHealthBar) {
+            currentTroop.fullHealthBar.destroy();
+            currentTroop.emptyHealthBar.destroy();
+        }
+
         currentTroop.destroy();
-        currentTroop.fullHealthBar.destroy();
-        currentTroop.emptyHealthBar.destroy();
+
+        level1State.updateMoney(5, 'add');
 
         if (level1State.currentWave == level1State.troopsPerWave.length - 1 && level1State.enemyTroops.children.length == 0) {
             level1State.endGame('win');
@@ -661,6 +737,7 @@ const level1State = {
     },
     endGame: function (state) {
         level1State.gameIsRunning = false;
+
         if (level1State.enemyTroops.children.length > 0) {
             level1State.enemyTroops.children.forEach(enemy => {
                 enemy.body.velocity = 0;
@@ -669,11 +746,12 @@ const level1State = {
 
         if (level1State.bulletsOnScreen.children.length > 0) {
             level1State.bulletsOnScreen.children.forEach(bullet => {
-                bullet.velocity = 0;
+                bullet.kill();
             })
         }
 
         Game.camera.fade('#000000', 1500, true, 0.7);
+
         setTimeout(function () {
             Game.camera.resetFX();
             Game.world.removeAll();
@@ -746,6 +824,15 @@ const level1State = {
 
         Game.add.text(Game.width / 2 + 3, 750, 'Levels', { 'fontSize': 30, 'font': 'Press Start 2P', 'fill': 'white', 'stroke': '#61461b', 'strokeThickness': 8 }).anchor.setTo(0.5);
     },
+    updateMoney: function(amount, toDo) {
+        if(toDo == 'add') {
+            level1State.avaliableMoney += amount
+        } else if(toDo == 'remove') {
+            level1State.avaliableMoney -= amount;
+        }
+
+        level1State.moneyOnScreen.text = level1State.avaliableMoney;
+    },
 
 
     //Variables
@@ -801,7 +888,7 @@ const level1State = {
     },
     gameDirection: 'right',
     enemyTroopsSpeed: 1000,
-    troopsPerWave: [1, 1],
-    turretsThisLevel: ['redTowerBase', 'greenTowerBase', 'singleRocketTowerBase', 'doubleRocketTowerBase', 'bulletTowerBase'],
+    troopsPerWave: [5],
+    turretsThisLevel: ['greenTowerBase', 'redTowerBase', 'bulletTowerBase', 'singleRocketTowerBase', 'doubleRocketTowerBase',],
 
 }

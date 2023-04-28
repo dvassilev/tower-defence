@@ -2,8 +2,8 @@
 
 const mainMenuState = {
     preload: function() {
-        Game.load.image('startButton', '../IMG/start button.png')
-        Game.load.image('background', '../IMG/menuBackground.png')
+        Game.load.image('startButton', '../IMG/Buttons/start button.png')
+        Game.load.image('background', '../IMG/Backgrounds/menuBackground.png')
     },
 
     create: function() {
