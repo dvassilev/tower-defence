@@ -891,8 +891,10 @@ const level2State = {
         let currentLevel = Game.state.getCurrentState().key.replace('Level', '');
 
         if (Number(currentLevel) + 1 <= Number(avaliableLevelsLength)) {
+            let nextLevel = `Level${currentLevel+1}State`;
+
             let nextLevelButton = Game.add.button(Game.width / 2, 590, 'buttonTemplate', () => {
-                Game.state.start(Game.state.current);
+                Game.state.start(nextLevel);
             });
             nextLevelButton.width = 430;
             nextLevelButton.height = 120;
